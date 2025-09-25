@@ -8,10 +8,11 @@ Our KWIC consists of an object oriented architecture style where we have a maste
 
 Advantages of our architecture- The advantages of our architecture is that it is modular, reusable, and scalable and since we split all the functions into different classes, it also allows the program to be very organized which makes it very easy to understand from an outside perspective. If any programmer were wanting to work or maintain anything about our program, they will be able to very easily as we set it up for easy modibility. 
 
-The disadvantages/risks- As of right now, this architecture is for a small scale program so if there were lots of data that must be handled, there would be more classes that would have to be added to our architecture as this would not suffice for large scale datasets. For example, if there were millions of lines, it would run into issues. 
+The disadvantages/risks- As of right now, this architecture is for a small scale program so if there were a lot of data sets that must be handled, there would be more classes that would have to be added as this would not suffice for large scale datasets. For example, if there were millions of lines, it would run into issues. 
 
 Constraints- 
 The language must be english
 Systems with low RAM will not be able to sort large data sets.
 
 Patterns- 
+There is pipe and filter and implicit invocation architecture pattern.
