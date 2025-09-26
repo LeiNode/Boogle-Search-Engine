@@ -5,7 +5,7 @@ from firebase_admin import credentials
 from firebase_admin import db
 
 # Path to your downloaded service account key JSON file
-cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-65fa1a5094.json")
+cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
 
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {
