@@ -38,13 +38,13 @@ def get_data():
     return jsonify(data)
 
 @app.route('/api/submit', methods=['POST'])
-def submit_data():
+def submit_home_data():
     ''' received_data = request.json # Get JSON data from the request body
     # Process received_data
     response_data = {"status": "success", "received": received_data}
     return jsonify(response_data) '''
     data = request.get_json()
-    myMessage = "Data Received: " + data['myInput'] + ".\nData in Database:"
+    myMessage = "Data Received: " + data['myInput'] + "\nData in Database:"
     for sentence in ref.get().values():
         myMessage = myMessage + " " + sentence
     myMessage += "\nMatches:"
@@ -52,6 +52,11 @@ def submit_data():
         if data['myInput'] == sentence:
             myMessage = myMessage + " " + sentence
     return jsonify({"message": f"{myMessage}"}), 200
+
+@app.route('/api/submit2', methods=['POST'])
+def submit_about_data():
+    data = request.get_json()
+    return jsonify({"message": f"{data['myInput']}"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
