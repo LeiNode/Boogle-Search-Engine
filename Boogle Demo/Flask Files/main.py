@@ -44,10 +44,10 @@ def submit_data():
     response_data = {"status": "success", "received": received_data}
     return jsonify(response_data) '''
     data = request.get_json()
-    myMessage = "Data Received: " + data['myInput'] + ". Data in Database:"
+    myMessage = "Data Received: " + data['myInput'] + ".\nData in Database:"
     for sentence in ref.get().values():
         myMessage = myMessage + " " + sentence
-    myMessage += " Matches:"
+    myMessage += "\nMatches:"
     for sentence in ref.get().values():
         if data['myInput'] == sentence:
             myMessage = myMessage + " " + sentence
