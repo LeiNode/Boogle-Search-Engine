@@ -3,7 +3,8 @@ from flask_cors import CORS # For handling Cross-Origin Resource Sharing
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-
+import KWIC
+ 
 # Path to your downloaded service account key JSON file
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
 
@@ -59,4 +60,10 @@ def submit_about_data():
     return jsonify({"message": f"{data['myInput']}"}), 200
 
 if __name__ == '__main__':
+    sentence = KWIC.CircularShift("beauty and the beast")
+    print(sentence.shift())
+    oSentence = KWIC.Alphabetizer(sentence.shift())
+    print(oSentence.alphabetize())
     app.run(debug=True)
+    
+    
