@@ -28,7 +28,7 @@ function AddDBData() {
                 <form onSubmit={handleSubmit} className="inline">
                     <img src={logo} height={55} alt="Boogle Logo" style={{ marginRight: '20px' }} />
                     <input type="text" id="Search" value={inputData} onChange={(e) => setInputData(e.target.value)} placeholder="Enter data to add..." style={{ paddingLeft: '24px', marginRight: '5px', width: '700px', height: '50px', borderRadius: '32px' }} />
-                    <input type="submit" value="Search"></input>
+                    <input type="submit" value="Add" style={{ width: '50px' }}></input>
                 </form>
                 {submitResponse && <p style={{ whiteSpace: 'pre-wrap' }}>{submitResponse}</p>}
                 <div className="results"></div>

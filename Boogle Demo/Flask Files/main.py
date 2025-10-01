@@ -85,16 +85,19 @@ def submit_about_data():
     sentence_exists = False
     data = request.get_json()
     sentence = f"{data['myInput']}"
-    if ref.get():
-        for db_sentence in ref.get().values():
-            if sentence == db_sentence:
-                sentence_exists = True
-                break
-    if not sentence_exists:
-        ref.push().set(sentence)
-        submitMsg = data['myInput'] + " was successfully added to the database!"
+    if sentence.strip() == "":
+        submitMsg = "Cannot add empty string to the database!\n"
     else:
-        submitMsg = data['myInput'] + " already exists in the database!"
+        if ref.get():
+            for db_sentence in ref.get().values():
+                if sentence == db_sentence:
+                    sentence_exists = True
+                    break
+        if not sentence_exists:
+            ref.push().set(sentence)
+            submitMsg = "The sentence \"" + data['myInput'] + "\" was successfully added to the database!\n"
+        else:
+            submitMsg = "The sentence \"" + data['myInput'] + "\" already exists in the database!\n"
     return jsonify({"message": f"{submitMsg}"}), 200
 
 if __name__ == '__main__':
