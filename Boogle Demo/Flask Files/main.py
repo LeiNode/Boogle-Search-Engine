@@ -4,7 +4,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import KWIC
- 
+
 # Path to your downloaded service account key JSON file
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
 
@@ -15,9 +15,16 @@ firebase_admin.initialize_app(cred, {
 
 # Add sentences to the DB
 ref = db.reference('sentences')
+ref.delete()
 sentences_to_add = [
-    "This is the second sentence.",
-    "And this is the third sentence."
+    "Jaws of Life",
+    "Long In The Tooth",
+    "Don't Count Your Chickens Before They Hatch",
+    "Every Cloud Has a Silver Lining",
+    "Fit as a Fiddle",
+    "Right Out of the Gate",
+    "Back To the Drawing Board",
+    "Burst Your Bubble"
 ]
 for sentence in sentences_to_add:
     sentence_exists = False
@@ -40,19 +47,21 @@ def get_data():
 
 @app.route('/api/submit', methods=['POST'])
 def submit_home_data():
-    ''' received_data = request.json # Get JSON data from the request body
-    # Process received_data
-    response_data = {"status": "success", "received": received_data}
-    return jsonify(response_data) '''
     data = request.get_json()
-    myMessage = "Data Received: " + data['myInput'] + "\nData in Database:"
+    all_circular_shifts = []
     for sentence in ref.get().values():
-        myMessage = myMessage + " " + sentence
-    myMessage += "\nMatches:"
-    for sentence in ref.get().values():
-        if data['myInput'] == sentence:
-            myMessage = myMessage + " " + sentence
-    return jsonify({"message": f"{myMessage}"}), 200
+        all_circular_shifts += KWIC.CircularShift(sentence).shift()
+    sorted_shifts = KWIC.Alphabetizer(all_circular_shifts).alphabetize()
+    circShiftedMsg = ""
+    words_to_ignore = ["a", "and", "as", "in", "is", "of", "on", "the", "to"]
+    for line in all_circular_shifts:
+        if line.split()[0].lower() not in words_to_ignore:
+            circShiftedMsg = circShiftedMsg + "" + line + "\n"
+    sortedMsg = "Alphabetized Lines:\n"
+    for line in sorted_shifts:
+        if line.split()[0].lower() not in words_to_ignore:
+            sortedMsg = sortedMsg + "" + line + "\n"
+    return jsonify({"message": f"{circShiftedMsg}{sortedMsg}"}), 200 
 
 @app.route('/api/submit2', methods=['POST'])
 def submit_about_data():
@@ -60,10 +69,4 @@ def submit_about_data():
     return jsonify({"message": f"{data['myInput']}"}), 200
 
 if __name__ == '__main__':
-    sentence = KWIC.CircularShift("beauty and the beast")
-    print(sentence.shift())
-    oSentence = KWIC.Alphabetizer(sentence.shift())
-    print(oSentence.alphabetize())
     app.run(debug=True)
-    
-    

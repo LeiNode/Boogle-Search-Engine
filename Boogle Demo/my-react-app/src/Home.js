@@ -1,26 +1,14 @@
 /* import logo from './logo.svg'; */
 import logo from './boogle-logo.png';
 import './Home.css';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 function Home() {
-    const [message, setMessage] = useState('');
     const [inputData, setInputData] = useState('');
     const [submitResponse, setSubmitResponse] = useState('');
 
-    // Fetch data on component mount
-    useEffect(() => {
-        fetch('http://localhost:5000/api/data') // Replace with your backend URL and port
-            .then(response => response.json())
-            .then(data => setMessage(data.message))
-            .catch(error => console.error('Error fetching data:', error));
-    }, []);
-
     const handleSubmit = async (event) => {
         event.preventDefault(); // Prevents the default form submission behavior (page reload)
-        /* const query = document.getElementById('Search').value.trim();
-        const messageDiv = document.querySelector('.results');
-        messageDiv.innerHTML = `${query}`; */
         try {
             const response = await fetch('http://localhost:5000/api/submit', {
                 method: 'POST',
@@ -36,28 +24,35 @@ function Home() {
         }
     };
 
+    function makeTable(data) {
+        let dbData = data.split("Alphabetized Lines:\n");
+        const tableData = [
+            { id: "Circular Shifted Lines", description: dbData[0] },
+            { id: "Alphabetized Lines", description: dbData[1] }
+        ];
+        return (
+            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }}>
+                <tbody>
+                    {tableData.map((item) => (
+                        <tr key={item.id}>
+                            <th scope="row" style={{ border: '2px solid white', padding: '24px' }}>{item.id}</th>
+                            <td style={{ border: '2px solid white', padding: '24px', textAlign: 'left' }}>{item.description}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        )
+    };
+
     return (
         <div className="App">
             <header className="App-header">
-                {/* <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a> */}
-                <p>Message from backend: {message}</p>
                 <form onSubmit={handleSubmit} className="inline">
                     <img src={logo} height={55} alt="Boogle Logo" style={{ marginRight: '20px' }} />
                     <input type="text" id="Search" name="Home_Page_Form" value={inputData} onChange={(e) => setInputData(e.target.value)} placeholder="Search..." style={{ paddingLeft: '24px', marginRight: '5px', width: '700px', height: '50px', borderRadius: '32px' }} />
                     <input type="submit" name="submit_Home_Form" value="Search"></input>
                 </form>
-                {submitResponse && <p style={{ whiteSpace: 'pre-wrap' }}>{submitResponse}</p>}
+                {submitResponse && <div><br></br>{makeTable(submitResponse)}</div>}
                 <div className="results"></div>
             </header>
         </div>
