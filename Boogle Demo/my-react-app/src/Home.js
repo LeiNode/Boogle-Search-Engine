@@ -25,18 +25,21 @@ function Home() {
     };
 
     function makeTable(data) {
-        let dbData = data.split("Alphabetized Lines:\n");
+        const processedData = data.replace(/&nbsp;/g, '\u00A0');
+        let dbData = processedData.split("Next Row\n");
         const tableData = [
-            { id: "Circular Shifted Lines", description: dbData[0] },
-            { id: "Alphabetized Lines", description: dbData[1] }
+            { id: "Results", description: dbData[0] },
+            { id: "Sentences", description: dbData[1] },
+            { id: "Circular Shifted Lines", description: dbData[2] },
+            { id: "Alphabetized Lines", description: dbData[3] }
         ];
         return (
             <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }}>
                 <tbody>
                     {tableData.map((item) => (
                         <tr key={item.id}>
-                            <th scope="row" style={{ border: '2px solid white', padding: '24px' }}>{item.id}</th>
-                            <td style={{ border: '2px solid white', padding: '24px', textAlign: 'left' }}>{item.description}</td>
+                            <th scope="row" style={{ border: '2px solid white', padding: '18px' }}>{item.id}</th>
+                            <td style={{ border: '2px solid white', padding: '18px', textAlign: 'left' }}>{item.description}</td>
                         </tr>
                     ))}
                 </tbody>

@@ -18,13 +18,14 @@ ref = db.reference('sentences')
 ref.delete()
 sentences_to_add = [
     "Jaws of Life",
+    "The Life of the Party",
     "Long In The Tooth",
     "Don't Count Your Chickens Before They Hatch",
     "Every Cloud Has a Silver Lining",
     "Fit as a Fiddle",
     "Right Out of the Gate",
     "Back To the Drawing Board",
-    "Burst Your Bubble"
+    "Break a Leg"
 ]
 for sentence in sentences_to_add:
     sentence_exists = False
@@ -48,23 +49,39 @@ def get_data():
 @app.route('/api/submit', methods=['POST'])
 def submit_home_data():
     data = request.get_json()
+    sentencesMsg = "\n".join(ref.get().values())
     all_circular_shifts = []
     for sentence in ref.get().values():
         all_circular_shifts += KWIC.CircularShift(sentence).shift()
     sorted_shifts = KWIC.Alphabetizer(all_circular_shifts).alphabetize()
-    circShiftedMsg = ""
+
+    circShiftedMsg = "Next Row\n"
     words_to_ignore = ["a", "and", "as", "in", "is", "of", "on", "the", "to"]
     for line in all_circular_shifts:
         if line.split()[0].lower() not in words_to_ignore:
             circShiftedMsg = circShiftedMsg + "" + line + "\n"
-    sortedMsg = "Alphabetized Lines:\n"
+
+    sortedMsg = "Next Row\n"
     for line in sorted_shifts:
         if line.split()[0].lower() not in words_to_ignore:
             sortedMsg = sortedMsg + "" + line + "\n"
-    return jsonify({"message": f"{circShiftedMsg}{sortedMsg}"}), 200 
+
+    input_matches = []
+    if (data['myInput'].strip() != ""):
+        for line in sorted_shifts:
+            if set(data['myInput'].strip().lower().split()).issubset(set(line.strip().lower().split())):
+                for sentence in list(ref.get().values()):
+                    if sorted(line.lower().split()) == sorted(sentence.lower().split()) and sentence not in input_matches:
+                        input_matches.append(sentence)
+                        break
+    matchesMsg = "\n".join(input_matches)
+    matchesMsg += "Next Row\n"
+
+    return jsonify({"message": f"{matchesMsg}{sentencesMsg}{circShiftedMsg}{sortedMsg}"}), 200
 
 @app.route('/api/submit2', methods=['POST'])
 def submit_about_data():
+    submitMsg = ""
     sentence_exists = False
     data = request.get_json()
     sentence = f"{data['myInput']}"
@@ -75,7 +92,10 @@ def submit_about_data():
                 break
     if not sentence_exists:
         ref.push().set(sentence)
-    return jsonify({"message": f"{data['myInput']}"}), 200
+        submitMsg = data['myInput'] + " was successfully added to the database!"
+    else:
+        submitMsg = data['myInput'] + " already exists in the database!"
+    return jsonify({"message": f"{submitMsg}"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
