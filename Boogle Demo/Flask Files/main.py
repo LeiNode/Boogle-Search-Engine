@@ -98,7 +98,8 @@ def submit_about_data():
             submitMsg = "The sentence \"" + data['myInput'] + "\" was successfully added to the database!\n"
         else:
             submitMsg = "The sentence \"" + data['myInput'] + "\" already exists in the database!\n"
-    return jsonify({"message": f"{submitMsg}"}), 200
+    dbSentencesMsg = "\n".join(ref.get().values())
+    return jsonify({"message": f"{submitMsg}DB Data:\n{dbSentencesMsg}"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

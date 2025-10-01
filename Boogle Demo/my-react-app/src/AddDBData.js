@@ -22,6 +22,28 @@ function AddDBData() {
         }
     };
 
+    function makeTable(data) {
+        let dbData = data.split("DB Data:\n");
+        const tableData = [
+            { id: "Sentences in Database", description: dbData[1] }
+        ];
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {dbData[0]}<br></br>
+                <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }}>
+                    <tbody>
+                        {tableData.map((item) => (
+                            <tr key={item.id}>
+                                <th scope="row" style={{ border: '2px solid white', padding: '18px' }}>{item.id}</th>
+                                <td style={{ border: '2px solid white', padding: '18px', textAlign: 'left' }}>{item.description}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )
+    };
+
     return (
         <div className="App">
             <header className="App-header">
@@ -30,7 +52,7 @@ function AddDBData() {
                     <input type="text" id="Search" value={inputData} onChange={(e) => setInputData(e.target.value)} placeholder="Enter data to add..." style={{ paddingLeft: '24px', marginRight: '5px', width: '700px', height: '50px', borderRadius: '32px' }} />
                     <input type="submit" value="Add" style={{ width: '50px' }}></input>
                 </form>
-                {submitResponse && <p style={{ whiteSpace: 'pre-wrap' }}>{submitResponse}</p>}
+                {submitResponse && <p style={{ whiteSpace: 'pre-wrap' }}>{makeTable(submitResponse)}</p>}
                 <div className="results"></div>
             </header>
         </div>
