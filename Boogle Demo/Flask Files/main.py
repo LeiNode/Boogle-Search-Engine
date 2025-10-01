@@ -65,7 +65,16 @@ def submit_home_data():
 
 @app.route('/api/submit2', methods=['POST'])
 def submit_about_data():
+    sentence_exists = False
     data = request.get_json()
+    sentence = f"{data['myInput']}"
+    if ref.get():
+        for db_sentence in ref.get().values():
+            if sentence == db_sentence:
+                sentence_exists = True
+                break
+    if not sentence_exists:
+        ref.push().set(sentence)
     return jsonify({"message": f"{data['myInput']}"}), 200
 
 if __name__ == '__main__':
