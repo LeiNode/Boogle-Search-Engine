@@ -41,30 +41,24 @@ app = Flask(__name__)
 CORS(app) # Enable CORS for your React app's origin
 
 @app.route('/api/data', methods=['GET'])
-def get_data():
+def getInput():
     # Your Python logic to retrieve or process data
     data = {"message": "Hello from Python backend!"}
     return jsonify(data)
 
 @app.route('/api/submit', methods=['POST'])
-def submit_home_data():
+def sendOutput():
     data = request.get_json()
     sentencesMsg = "\n".join(ref.get().values())
-    all_circular_shifts = []
-    for sentence in ref.get().values():
-        all_circular_shifts += KWIC.CircularShift(sentence).shift()
-    sorted_shifts = KWIC.Alphabetizer(all_circular_shifts).alphabetize()
+    all_circular_shifts = KWIC.CircularShift(list(ref.get().values())).computeCircularShifts()
+    filtered_shifts = KWIC.NoiseEliminator(all_circular_shifts).eliminateNoise()
+    sorted_shifts = KWIC.Alphabetizer(filtered_shifts).alphabetizeShifts()
 
     circShiftedMsg = "Next Row\n"
-    words_to_ignore = ["a", "and", "as", "in", "is", "of", "on", "the", "to"]
-    for line in all_circular_shifts:
-        if line.split()[0].lower() not in words_to_ignore:
-            circShiftedMsg = circShiftedMsg + "" + line + "\n"
+    circShiftedMsg = circShiftedMsg + "\n".join(filtered_shifts)
 
     sortedMsg = "Next Row\n"
-    for line in sorted_shifts:
-        if line.split()[0].lower() not in words_to_ignore:
-            sortedMsg = sortedMsg + "" + line + "\n"
+    sortedMsg = sortedMsg + "\n".join(sorted_shifts)
 
     input_matches = []
     if (data['myInput'].strip() != ""):
@@ -80,7 +74,7 @@ def submit_home_data():
     return jsonify({"message": f"{matchesMsg}{sentencesMsg}{circShiftedMsg}{sortedMsg}"}), 200
 
 @app.route('/api/submit2', methods=['POST'])
-def submit_about_data():
+def storeInput():
     submitMsg = ""
     sentence_exists = False
     data = request.get_json()
