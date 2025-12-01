@@ -1,105 +1,142 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS # For handling Cross-Origin Resource Sharing
+from flask_cors import CORS
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
+from firebase_admin import credentials, db
 import KWIC
 
-# Path to your downloaded service account key JSON file
+#Firebase Setup
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
-
-# Initialize the app with a service account, granting admin privileges
+    
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://boogle-demo-default-rtdb.firebaseio.com/'  # Found in your Firebase Realtime Database console
-})
-
-# Add sentences to the DB
-ref = db.reference('sentences')
-ref.delete()
-sentences_to_add = [
-    "Jaws of Life",
-    "The Life of the Party",
-    "Long In The Tooth",
-    "Don't Count Your Chickens Before They Hatch",
-    "Every Cloud Has a Silver Lining",
-    "Fit as a Fiddle",
-    "Right Out of the Gate",
-    "Back To the Drawing Board",
-    "Break a Leg"
-]
-for sentence in sentences_to_add:
-    sentence_exists = False
-    if ref.get():
-        for db_sentence in ref.get().values():
-            if sentence == db_sentence:
-                sentence_exists = True
-                break
-    if not sentence_exists:
-        ref.push().set(sentence)
+    'databaseURL': 'https://boogle-demo-default-rtdb.firebaseio.com/'
+})  
 
 app = Flask(__name__)
-CORS(app) # Enable CORS for your React app's origin
+CORS(app)
 
-@app.route('/api/data', methods=['GET'])
-def get_data():
-    # Your Python logic to retrieve or process data
-    data = {"message": "Hello from Python backend!"}
-    return jsonify(data)
+noise_filter = KWIC.NoiseFilter()
 
-@app.route('/api/submit', methods=['POST'])
-def submit_home_data():
+# Preload entries
+def preload_entries():
+    start_entries = [
+        ("https://google.com", "Web Search Engine"),
+        ("https://wikipedia.org", "Free online encyclopedia"),
+        ("https://github.com", "Code hosting platform"),
+        ("https://stackoverflow.com", "Programming questions answers"),
+        ("https://youtube.com", "Video sharing website"),
+        ("https://twitter.com", "Social media network"),
+        ("https://amazon.com", "Online shopping store"),
+        ("https://netflix.com", "Streaming entertainment service"),
+        ("https://spotify.com", "Music streaming platform"),
+        ("https://reddit.com", "Social news aggregation"),
+        ("https://linkedin.com", "Professional networking site"),
+        ("https://instagram.com", "Photo sharing application"),
+        ("https://medium.com", "Online publishing platform"),
+        ("https://quora.com", "Question answer community"),
+        ("https://dropbox.com", "Cloud storage service"),
+        ("https://trello.com", "Project management tool"),
+        ("https://slack.com", "Team communication software"),
+        ("https://zoom.us", "Video conferencing application"),
+        ("https://airbnb.com", "Vacation rental marketplace"),
+        ("https://uber.com", "Ride sharing service"),
+        ("https://twitch.tv", "Live streaming platform")
+    ]
+
+    ref = db.reference("entries")
+    ref.delete()
+
+    for url, descriptor in start_entries:
+        cleaned_descriptor = noise_filter.remove_noise(descriptor)
+        shifts = KWIC.CircularShift(cleaned_descriptor).shift()
+        shifts = KWIC.Alphabetizer(shifts).alphabetize()
+        ref.push({
+            "url": url,
+            "descriptorOriginal": descriptor,
+            "descriptorClean": cleaned_descriptor,
+            "shifts": shifts
+        })
+
+preload_entries()
+
+@app.route('/api/addEntry', methods=['POST'])
+def add_entry():
     data = request.get_json()
-    sentencesMsg = "\n".join(ref.get().values())
-    all_circular_shifts = []
-    for sentence in ref.get().values():
-        all_circular_shifts += KWIC.CircularShift(sentence).shift()
-    sorted_shifts = KWIC.Alphabetizer(all_circular_shifts).alphabetize()
+    url = data.get("url", "").strip()
+    descriptor = data.get("descriptor", "").strip()
 
-    circShiftedMsg = "Next Row\n"
-    words_to_ignore = ["a", "and", "as", "in", "is", "of", "on", "the", "to"]
-    for line in all_circular_shifts:
-        if line.split()[0].lower() not in words_to_ignore:
-            circShiftedMsg = circShiftedMsg + "" + line + "\n"
+    if not url or not descriptor:
+        return jsonify({"message": "Error: Missing URL or descriptor"}), 400
 
-    sortedMsg = "Next Row\n"
-    for line in sorted_shifts:
-        if line.split()[0].lower() not in words_to_ignore:
-            sortedMsg = sortedMsg + "" + line + "\n"
+    cleaned_descriptor = noise_filter.remove_noise(descriptor)
+    shifts = KWIC.CircularShift(cleaned_descriptor).shift()
+    shifts = KWIC.Alphabetizer(shifts).alphabetize()
 
-    input_matches = []
-    if (data['myInput'].strip() != ""):
-        for line in sorted_shifts:
-            if set(data['myInput'].strip().lower().split()).issubset(set(line.strip().lower().split())):
-                for sentence in list(ref.get().values()):
-                    if sorted(line.lower().split()) == sorted(sentence.lower().split()) and sentence not in input_matches:
-                        input_matches.append(sentence)
-                        break
-    matchesMsg = "\n".join(input_matches)
-    matchesMsg += "Next Row\n"
+    ref = db.reference("entries")
+    ref.push({
+        "url": url,
+        "descriptorOriginal": descriptor,
+        "descriptorClean": cleaned_descriptor,
+        "shifts": shifts
+    })
 
-    return jsonify({"message": f"{matchesMsg}{sentencesMsg}{circShiftedMsg}{sortedMsg}"}), 200
+    return jsonify({"message": "Entry added successfully!"}), 200
 
-@app.route('/api/submit2', methods=['POST'])
-def submit_about_data():
-    submitMsg = ""
-    sentence_exists = False
+@app.route('/api/search', methods=['POST'])
+def search_entries():
     data = request.get_json()
-    sentence = f"{data['myInput']}"
-    if sentence.strip() == "":
-        submitMsg = "Cannot add empty string to the database!\n"
-    else:
-        if ref.get():
-            for db_sentence in ref.get().values():
-                if sentence == db_sentence:
-                    sentence_exists = True
-                    break
-        if not sentence_exists:
-            ref.push().set(sentence)
-            submitMsg = "The sentence \"" + data['myInput'] + "\" was successfully added to the database!\n"
-        else:
-            submitMsg = "The sentence \"" + data['myInput'] + "\" already exists in the database!\n"
-    dbSentencesMsg = "\n".join(ref.get().values())
-    return jsonify({"message": f"{submitMsg}DB Data:\n{dbSentencesMsg}"}), 200
+    query = data.get("query", "")
+    page = int(data.get("page", 1))
+
+    if query == "":
+        return jsonify({"results": [], "totalPages": 1}), 200
+
+    ref = db.reference("entries")
+    all_entries = ref.get() or {}
+
+    all_matched_shifts = []
+
+    for entry_id, entry in all_entries.items():
+        url = entry.get("url", "")
+        shifts = entry.get("shifts", [])
+
+        for s in shifts:
+            parts = s.split()
+            if len(parts) == 0 or parts[0] in noise_filter.noise_words:
+                continue
+            if query in s:
+                all_matched_shifts.append({"shift": s, "url": url})
+
+    all_matched_shifts.sort(key=lambda x: x["shift"].lower())
+
+    # Pagination
+    page_size = 10
+    total_count = len(all_matched_shifts)
+    totalPages = max(1, (total_count + page_size - 1) // page_size)
+    page = max(1, min(page, totalPages))
+    start = (page - 1) * page_size
+    end = start + page_size
+    paged = all_matched_shifts[start:end]
+
+    return jsonify({"results": paged, "totalPages": totalPages}), 200
+
+@app.route('/api/kwicIndex', methods=['GET'])
+def kwic_index():
+    ref = db.reference("entries")
+    all_entries = ref.get() or {}
+    all_shifts = []
+
+    for entry_id, entry in all_entries.items():
+        url = entry["url"]
+        shifts = entry["shifts"]
+        for s in shifts:
+            first_word = s.split()[0]
+            if first_word in noise_filter.noise_words:
+                continue
+            all_shifts.append((s, url))
+
+    all_shifts.sort(key=lambda x: x[0].lower())
+    output = [{"shift": s, "url": url} for (s, url) in all_shifts]
+    return jsonify(output), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

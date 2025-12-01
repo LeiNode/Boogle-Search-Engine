@@ -12,6 +12,7 @@ function NavigationBar() {
                 <ul>
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/addDBData">Add to Database</Link></li>
+                    <li><Link to="/kwicIndex">KWIC Index</Link></li>
                 </ul>
             </>
         )}

@@ -4,6 +4,7 @@ import NavigationBar from './NavigationBar';
 import { Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import AddDBData from './AddDBData';
+import KWICIndex from './KWICIndex';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/addDBData" element={<AddDBData />} />
+          <Route path="/kwicIndex" element={<KWICIndex />} />
         </Routes>
       </>
     </div>
