@@ -3,7 +3,7 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
 import KWIC
-
+import re 
 #Firebase Setup
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
     
@@ -15,6 +15,9 @@ app = Flask(__name__)
 CORS(app)
 
 noise_filter = KWIC.NoiseFilter()
+url_pattern = re.compile(
+    r'^https?://[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?\.(edu|com|org|net)$'
+)
 
 # Preload entries
 def preload_entries():
@@ -44,7 +47,8 @@ def preload_entries():
 
     ref = db.reference("entries")
     ref.delete()
-
+    
+   
     for url, descriptor in start_entries:
         cleaned_descriptor = noise_filter.remove_noise(descriptor)
         shifts = KWIC.CircularShift(cleaned_descriptor).shift()
@@ -66,7 +70,8 @@ def add_entry():
 
     if not url or not descriptor:
         return jsonify({"message": "Missing URL or descriptor"}), 400
-
+    if not url_pattern.match(url):
+        return jsonify({"message": "Invalid URL format"}), 400
     cleaned_descriptor = noise_filter.remove_noise(descriptor)
     shifts = KWIC.CircularShift(cleaned_descriptor).shift()
     shifts = KWIC.Alphabetizer(shifts).alphabetize()

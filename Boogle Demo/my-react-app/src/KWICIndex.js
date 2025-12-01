@@ -63,6 +63,7 @@ function KWICIndex() {
                                         }
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        style={{ color: "white", textDecoration: "none" }}
                                     >
                                         {item.url}
                                     </a>

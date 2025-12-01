@@ -54,7 +54,7 @@ function AddDBData() {
             const data = await response.json();
             setSubmitResponse(data.message);
         } catch (error) {
-            setSubmitResponse("Error adding entry.");
+            setSubmitResponse("Error: Input must be in format URL /n descriptor");
         }
     };
 
