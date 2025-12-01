@@ -65,7 +65,7 @@ def add_entry():
     descriptor = data.get("descriptor", "").strip()
 
     if not url or not descriptor:
-        return jsonify({"message": "Error: Missing URL or descriptor"}), 400
+        return jsonify({"message": "Missing URL or descriptor"}), 400
 
     cleaned_descriptor = noise_filter.remove_noise(descriptor)
     shifts = KWIC.CircularShift(cleaned_descriptor).shift()
@@ -117,7 +117,7 @@ def search_entries():
     end = start + page_size
     paged = all_matched_shifts[start:end]
 
-    return jsonify({"results": paged, "totalPages": totalPages}), 200
+    return jsonify({"results": paged, "totalPages": totalPages, "totalResults": total_count}), 200
 
 @app.route('/api/kwicIndex', methods=['GET'])
 def kwic_index():
