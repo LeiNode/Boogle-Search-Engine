@@ -114,7 +114,7 @@ function Home() {
                 </form>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <h6 style={{ display: 'flex', justifyContent: 'center', marginRight: '10px' }}>Sort By:</h6>
-                    <select value={selectValue} onChange={handleChange} style={{ width: '175px', height: '25px', marginTop: '3px' }}>
+                    <select value={selectValue} onChange={handleChange} style={{ width: '190px', height: '25px', marginTop: '3px' }}>
                         <option value="optionA">Alphabetical Order</option>
                         <option value="optionB">Most Frequently Accessed</option>
                     </select>

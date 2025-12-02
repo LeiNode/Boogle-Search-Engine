@@ -3,7 +3,8 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
 import KWIC
-import re 
+import re
+import ExpressionParser
 #Firebase Setup
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
     
@@ -101,22 +102,34 @@ def search_entries():
 
     all_matched_shifts = []
 
-    for entry_id, entry in all_entries.items():
-        url = entry.get("url", "")
-        shifts = entry.get("shifts", [])
+    symbols = [",", ".", "`", "!", "@", "#", "$", "^", "*", "(", ")", "-", "+", "{", "}", "[", "]", ":", ";", "'", "\"", "/", "<", ">", "?", "|"]
+    filtered_query = query
+    for symbol in symbols:
+        filtered_query = filtered_query.replace(symbol, "")
 
-        for s in shifts:
-            parts = s.split()
-            if len(parts) == 0 or parts[0] in noise_filter.noise_words:
-                continue
-            if query in s:
-                valid_shift = False
-                for index, item in enumerate(start_entries):
-                    if parts == item[1].split():
-                        valid_shift = True
-                        break
-                if valid_shift:
-                    all_matched_shifts.append({"shift": s, "url": url})
+    if "OR" not in filtered_query and "AND" not in filtered_query and "NOT" not in filtered_query:
+        for entry_id, entry in all_entries.items():
+            url = entry.get("url", "")
+            shifts = entry.get("shifts", [])
+
+            for s in shifts:
+                parts = s.split()
+                if len(parts) == 0 or parts[0] in noise_filter.noise_words:
+                    continue
+                if set(filtered_query.strip().split()) & set(parts):
+                    valid_shift = False
+                    for index, item in enumerate(start_entries):
+                        if parts == item[1].split():
+                            valid_shift = True
+                            break
+                    if valid_shift:
+                        all_matched_shifts.append({"shift": s, "url": url})
+    else:
+        descriptor_list = [item[1] for item in start_entries]
+        url_list = [item[0] for item in start_entries]
+        result_indexes = ExpressionParser.ExpressionParser(filtered_query, descriptor_list).filter_descriptors()
+        for index in result_indexes:
+            all_matched_shifts.append({"shift": descriptor_list[index], "url": url_list[index]})
 
     all_matched_shifts.sort(key=lambda x: x["shift"].lower())
 
