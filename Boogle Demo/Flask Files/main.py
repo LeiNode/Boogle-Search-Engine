@@ -19,31 +19,32 @@ url_pattern = re.compile(
     r'^https?://[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?\.(edu|com|org|net)$'
 )
 
+start_entries = [
+    ("https://google.com", "Web Search Engine"),
+    ("https://wikipedia.org", "Free online encyclopedia"),
+    ("https://github.com", "Code hosting platform"),
+    ("https://stackoverflow.com", "Programming questions answers"),
+    ("https://youtube.com", "Video sharing website"),
+    ("https://twitter.com", "Social media network"),
+    ("https://amazon.com", "Online shopping store"),
+    ("https://netflix.com", "Streaming entertainment service"),
+    ("https://spotify.com", "Music streaming platform"),
+    ("https://reddit.com", "Social news aggregation"),
+    ("https://linkedin.com", "Professional networking site"),
+    ("https://instagram.com", "Photo sharing application"),
+    ("https://medium.com", "Online publishing platform"),
+    ("https://quora.com", "Question answer community"),
+    ("https://dropbox.com", "Cloud storage service"),
+    ("https://trello.com", "Project management tool"),
+    ("https://slack.com", "Team communication software"),
+    ("https://zoom.us", "Video conferencing application"),
+    ("https://airbnb.com", "Vacation rental marketplace"),
+    ("https://uber.com", "Ride sharing service"),
+    ("https://twitch.tv", "Live streaming platform")
+]
+
 # Preload entries
 def preload_entries():
-    start_entries = [
-        ("https://google.com", "Web Search Engine"),
-        ("https://wikipedia.org", "Free online encyclopedia"),
-        ("https://github.com", "Code hosting platform"),
-        ("https://stackoverflow.com", "Programming questions answers"),
-        ("https://youtube.com", "Video sharing website"),
-        ("https://twitter.com", "Social media network"),
-        ("https://amazon.com", "Online shopping store"),
-        ("https://netflix.com", "Streaming entertainment service"),
-        ("https://spotify.com", "Music streaming platform"),
-        ("https://reddit.com", "Social news aggregation"),
-        ("https://linkedin.com", "Professional networking site"),
-        ("https://instagram.com", "Photo sharing application"),
-        ("https://medium.com", "Online publishing platform"),
-        ("https://quora.com", "Question answer community"),
-        ("https://dropbox.com", "Cloud storage service"),
-        ("https://trello.com", "Project management tool"),
-        ("https://slack.com", "Team communication software"),
-        ("https://zoom.us", "Video conferencing application"),
-        ("https://airbnb.com", "Vacation rental marketplace"),
-        ("https://uber.com", "Ride sharing service"),
-        ("https://twitch.tv", "Live streaming platform")
-    ]
 
     ref = db.reference("entries")
     ref.delete()
@@ -109,7 +110,13 @@ def search_entries():
             if len(parts) == 0 or parts[0] in noise_filter.noise_words:
                 continue
             if query in s:
-                all_matched_shifts.append({"shift": s, "url": url})
+                valid_shift = False
+                for index, item in enumerate(start_entries):
+                    if parts == item[1].split():
+                        valid_shift = True
+                        break
+                if valid_shift:
+                    all_matched_shifts.append({"shift": s, "url": url})
 
     all_matched_shifts.sort(key=lambda x: x["shift"].lower())
 

@@ -8,6 +8,19 @@ function Home() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
+    const [clickCount, setClickCount] = useState({});
+    const [selectValue, setSelectValue] = useState('optionA');
+
+    const handleChange = (event) => {
+        setSelectValue(event.target.value);
+    };
+
+    const handleClick = (url) => {
+        setClickCount(prev => ({
+            ...prev,
+            [url]: (prev[url] || 0) + 1
+        }));
+    };
 
     const handleSubmit = async (event, newPage = 1) => {
         if (event) event.preventDefault();
@@ -21,7 +34,10 @@ function Home() {
 
             const data = await response.json();
 
-            setResults(data.results);
+            if (selectValue === 'optionA')
+                setResults(data.results);
+            else if (selectValue === 'optionB')
+                setResults(data.results.sort((a, b) => (clickCount[b.url] || 0) - (clickCount[a.url] || 0)));
             setTotalPages(data.totalPages);
             setTotalResults(data.totalResults);
             setPage(newPage);
@@ -49,22 +65,24 @@ function Home() {
                 <tbody>
                     {results.map((item, index) => (
                         <tr key={index}>
-                            <td style={{ border: '2px solid white', padding: '18px', fontWeight: 'bold' }}>
+                            <td style={{ border: '2px solid transparent', padding: '18px', fontWeight: 'bold', textAlign: 'left' }}>
                                 {item.shift}
                             </td>
-                            <td style={{ border: '2px solid white', padding: '18px' }}>
+                            <td style={{ border: '2px solid transparent', padding: '18px', textAlign: 'left' }}>
                                 <a
                                     href={
                                         item.url.startsWith("http://") || item.url.startsWith("https://")
                                             ? item.url
                                             : "http://" + item.url
                                     }
+                                    onClick={() => handleClick(item.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{ color: "white", textDecoration: "none" }}
                                 >
                                     {item.url}
                                 </a>
+                                <span> — {clickCount[item.url] || 0} clicks</span>
                             </td>
                         </tr>
                     ))}
@@ -94,8 +112,13 @@ function Home() {
                     />
                     <input type="submit" value="Search" />
                 </form>
-
-                <br />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <h6 style={{ display: 'flex', justifyContent: 'center', marginRight: '10px' }}>Sort By:</h6>
+                    <select value={selectValue} onChange={handleChange} style={{ width: '175px', height: '25px', marginTop: '3px' }}>
+                        <option value="optionA">Alphabetical Order</option>
+                        <option value="optionB">Most Frequently Accessed</option>
+                    </select>
+                </div>
 
                 {results.length > 0 && (
                     <>
