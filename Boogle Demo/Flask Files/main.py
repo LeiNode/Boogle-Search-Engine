@@ -5,6 +5,7 @@ from firebase_admin import credentials, db
 import KWIC
 import re
 import ExpressionParser
+import requests
 #Firebase Setup
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
     
@@ -21,27 +22,27 @@ url_pattern = re.compile(
 )
 
 start_entries = [
-    ("https://google.com", "Web Search Engine"),
-    ("https://wikipedia.org", "Free online encyclopedia"),
-    ("https://github.com", "Code hosting platform"),
-    ("https://stackoverflow.com", "Programming questions answers"),
-    ("https://youtube.com", "Video sharing website"),
-    ("https://twitter.com", "Social media network"),
-    ("https://amazon.com", "Online shopping store"),
-    ("https://netflix.com", "Streaming entertainment service"),
-    ("https://spotify.com", "Music streaming platform"),
-    ("https://reddit.com", "Social news aggregation"),
-    ("https://linkedin.com", "Professional networking site"),
-    ("https://instagram.com", "Photo sharing application"),
-    ("https://medium.com", "Online publishing platform"),
-    ("https://quora.com", "Question answer community"),
-    ("https://dropbox.com", "Cloud storage service"),
-    ("https://trello.com", "Project management tool"),
-    ("https://slack.com", "Team communication software"),
-    ("https://zoom.us", "Video conferencing application"),
-    ("https://airbnb.com", "Vacation rental marketplace"),
-    ("https://uber.com", "Ride sharing service"),
-    ("https://twitch.tv", "Live streaming platform")
+    ("http://google.com", "Web Search Engine"),
+    ("http://wikipedia.org", "Free online encyclopedia"),
+    ("http://github.com", "Code hosting platform"),
+    ("http://stackoverflow.com", "Programming questions answers"),
+    ("http://youtube.com", "Video sharing website"),
+    ("http://twitter.com", "Social media network"),
+    ("http://amazon.com", "Online shopping store"),
+    ("http://netflix.com", "Streaming entertainment service"),
+    ("http://spotify.com", "Music streaming platform"),
+    ("http://reddit.com", "Social news aggregation"),
+    ("http://linkedin.com", "Professional networking site"),
+    ("http://instagram.com", "Photo sharing application"),
+    ("http://medium.com", "Online publishing platform"),
+    ("http://quora.com", "Question answer community"),
+    ("http://dropbox.com", "Cloud storage service"),
+    ("http://trello.com", "Project management tool"),
+    ("http://slack.com", "Team communication software"),
+    ("http://zoom.us", "Video conferencing application"),
+    ("http://airbnb.com", "Vacation rental marketplace"),
+    ("http://uber.com", "Ride sharing service"),
+    ("http://twitch.tv", "Live streaming platform")
 ]
 
 # Preload entries
@@ -52,15 +53,24 @@ def preload_entries():
     
    
     for url, descriptor in start_entries:
-        cleaned_descriptor = noise_filter.remove_noise(descriptor)
-        shifts = KWIC.CircularShift(cleaned_descriptor).shift()
-        shifts = KWIC.Alphabetizer(shifts).alphabetize()
-        ref.push({
-            "url": url,
-            "descriptorOriginal": descriptor,
-            "descriptorClean": cleaned_descriptor,
-            "shifts": shifts
-        })
+        try:
+            response1 = requests.get(url, allow_redirects=True, stream=True, timeout=8)
+            response2 = requests.head(url, allow_redirects=True, timeout=8)
+            if response1.status_code < 404 and response2.status_code < 404:
+                cleaned_descriptor = noise_filter.remove_noise(descriptor)
+                shifts = KWIC.CircularShift(cleaned_descriptor).shift()
+                shifts = KWIC.Alphabetizer(shifts).alphabetize()
+                ref.push({
+                    "url": url,
+                    "descriptorOriginal": descriptor,
+                    "descriptorClean": cleaned_descriptor,
+                    "shifts": shifts
+                })
+            else:
+                start_entries.remove((url, descriptor))
+        except requests.RequestException:
+            start_entries.remove((url, descriptor))
+            continue
 
 preload_entries()
 
@@ -79,6 +89,15 @@ def add_entry():
     shifts = KWIC.Alphabetizer(shifts).alphabetize()
 
     ref = db.reference("entries")
+    all_entries = ref.get() or {}
+    for entry_id, entry in all_entries.items():
+        url_entry = entry.get("url", "")
+        shifts_entry = entry.get("shifts", [])
+        if url == url_entry:
+            return jsonify({"message": "URL already exists in index!"}), 400
+        if descriptor == shifts_entry:
+            return jsonify({"message": "Descriptor already exists in index. Please change the descriptor."}), 400
+    start_entries.append((url, descriptor))
     ref.push({
         "url": url,
         "descriptorOriginal": descriptor,
@@ -87,6 +106,14 @@ def add_entry():
     })
 
     return jsonify({"message": "Entry added successfully!"}), 200
+
+@app.route('/api/loadSearch', methods=['POST'])
+def load_search_table():
+    descriptor_list = [item[1] for item in start_entries]
+    url_list = [item[0] for item in start_entries]
+    all_entries = [{"shift": descriptor_list[i], "url": url_list[i]} for i in range(len(descriptor_list))]
+    all_entries.sort(key=lambda x: x["shift"].lower())
+    return jsonify(all_entries), 200
 
 @app.route('/api/search', methods=['POST'])
 def search_entries():
@@ -134,15 +161,15 @@ def search_entries():
     all_matched_shifts.sort(key=lambda x: x["shift"].lower())
 
     # Pagination
-    page_size = 10
+    page_size = 8
     total_count = len(all_matched_shifts)
     totalPages = max(1, (total_count + page_size - 1) // page_size)
-    page = max(1, min(page, totalPages))
+    ''' page = max(1, min(page, totalPages))
     start = (page - 1) * page_size
     end = start + page_size
-    paged = all_matched_shifts[start:end]
+    paged = all_matched_shifts[start:end] '''
 
-    return jsonify({"results": paged, "totalPages": totalPages, "totalResults": total_count}), 200
+    return jsonify({"results": all_matched_shifts, "totalPages": totalPages, "totalResults": total_count}), 200
 
 @app.route('/api/kwicIndex', methods=['GET'])
 def kwic_index():

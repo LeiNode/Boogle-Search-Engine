@@ -1,6 +1,6 @@
 import logo from './boogle-logo.png';
 import './Home.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function Home() {
     const [inputData, setInputData] = useState('');
@@ -10,6 +10,30 @@ function Home() {
     const [totalResults, setTotalResults] = useState(0);
     const [clickCount, setClickCount] = useState({});
     const [selectValue, setSelectValue] = useState('optionA');
+
+    const fetchInitialIndex = async (pageNum) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/loadSearch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: inputData }),
+            });
+            const data = await response.json();
+
+            // Pagination logic
+            const pageSize = 8;
+            const pages = Math.max(1, Math.ceil(data.length / pageSize));
+            setTotalResults(data.length)
+            setTotalPages(pages);
+            setResults(data);
+        } catch (error) {
+            console.error("Error fetching KWIC index:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchInitialIndex(page);
+    }, []);
 
     const handleChange = (event) => {
         setSelectValue(event.target.value);
@@ -37,7 +61,7 @@ function Home() {
             if (selectValue === 'optionA')
                 setResults(data.results);
             else if (selectValue === 'optionB')
-                setResults(data.results.sort((a, b) => (clickCount[b.url] || 0) - (clickCount[a.url] || 0)));
+                setResults(data.results.slice().sort((a, b) => (clickCount[b.url] || 0) - (clickCount[a.url] || 0)));
             setTotalPages(data.totalPages);
             setTotalResults(data.totalResults);
             setPage(newPage);
@@ -48,27 +72,33 @@ function Home() {
     };
 
     const nextPage = () => {
-        if (page < totalPages) handleSubmit(null, page + 1);
+        if (page < totalPages) setPage(page + 1);
     };
 
     const prevPage = () => {
-        if (page > 1) handleSubmit(null, page - 1);
+        if (page > 1) setPage(page - 1);
     };
 
-    function makeTable(results) {
+    function makeTable(results, currentPage) {
         if (!Array.isArray(results) || results.length === 0) {
             return <div>No results found.</div>;
         }
 
+        const pageSize = 8;
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = currentPage * pageSize;
+
+        const currentItems = results.slice(startIndex, endIndex);
+
         return (
-            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }}>
+            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap', marginLeft: "30px" }}>
                 <tbody>
-                    {results.map((item, index) => (
+                    {currentItems.map((item, index) => (
                         <tr key={index}>
-                            <td style={{ border: '2px solid transparent', padding: '18px', fontWeight: 'bold', textAlign: 'left' }}>
+                            <td style={{ border: '1px solid transparent', padding: '12px', fontWeight: 'bold', textAlign: 'left', width: '275px' }}>
                                 {item.shift}
                             </td>
-                            <td style={{ border: '2px solid transparent', padding: '18px', textAlign: 'left' }}>
+                            <td style={{ border: '1px solid transparent', padding: '12px', textAlign: 'left' }}>
                                 <a
                                     href={
                                         item.url.startsWith("http://") || item.url.startsWith("https://")
@@ -78,7 +108,7 @@ function Home() {
                                     onClick={() => handleClick(item.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: "white", textDecoration: "none" }}
+                                    style={{ color: "ghostwhite", textDecoration: "none" }}
                                 >
                                     {item.url}
                                 </a>
@@ -120,20 +150,22 @@ function Home() {
                     </select>
                 </div>
 
-                {results.length > 0 && (
+                {results.length === 0 ? (
+                    <h5>No results found.</h5>
+                ) : (
                     <>
-                        {makeTable(results)}
+                        {makeTable(results, page)}
 
-                        <div style={{ marginTop: '20px', fontSize: '18px' }}>
+                        <h6 style={{ marginTop: '40px', fontSize: '18px' }}>
                             Page {page} of {totalPages} — {totalResults} results
-                        </div>
+                        </h6>
 
-                        <div style={{ marginTop: '10px' }}>
-                            <button onClick={prevPage} disabled={page === 1}>
+                        <div style={{ marginTop: '-30px' }}>
+                            <button onClick={prevPage} disabled={page === 1} style={{ marginLeft: '190px', width: '90px' }}>
                                 ◀ Previous
                             </button>
 
-                            <button onClick={nextPage} disabled={page === totalPages} style={{ marginLeft: '10px' }}>
+                            <button onClick={nextPage} disabled={page === totalPages} style={{ marginLeft: '80px', width: '90px' }}>
                                 Next ▶
                             </button>
                         </div>

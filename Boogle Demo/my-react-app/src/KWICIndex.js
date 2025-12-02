@@ -46,14 +46,14 @@ function KWICIndex() {
             <header className="App-header">
                 <h2>KWIC Index</h2>
 
-                <table style={{ fontSize: "16px", whiteSpace: "pre-wrap" }}>
+                <table style={{ fontSize: "16px", whiteSpace: "pre-wrap", marginLeft: "30px" }}>
                     <tbody>
                         {kwicData.map((item, index) => (
                             <tr key={index}>
-                                <td style={{ padding: "12px", fontWeight: "bold" }}>
+                                <td style={{ padding: "12px", fontWeight: "bold", textAlign: 'left', width: '325px' }}>
                                     {item.shift}
                                 </td>
-                                <td style={{ padding: "12px" }}>
+                                <td style={{ padding: "12px", textAlign: 'left' }}>
                                     <a
                                         href={
                                             item.url.startsWith("http://") ||
@@ -74,16 +74,16 @@ function KWICIndex() {
                 </table>
 
                 {kwicData.length > 0 && (
-                    <div style={{ marginTop: "20px" }}>
-                        <button onClick={prevPage} disabled={page === 1}>
+                    <div style={{ marginTop: "50px", marginLeft: "180px" }}>
+                        <button onClick={prevPage} disabled={page === 1} style={{ width: "90px" }}>
                             ◀ Previous
                         </button>
 
-                        <span style={{ margin: "0 15px" }}>
+                        <span style={{ marginLeft: "-100px", marginRight: "75px" }}>
                             Page {page} of {totalPages}
                         </span>
 
-                        <button onClick={nextPage} disabled={page === totalPages}>
+                        <button onClick={nextPage} disabled={page === totalPages} style={{ width: "90px" }}>
                             Next ▶
                         </button>
                     </div>
