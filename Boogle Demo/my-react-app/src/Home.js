@@ -71,6 +71,28 @@ function Home() {
         }
     };
 
+    const handleRemove = async (descriptor, url) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descriptor: descriptor, url: url }),
+            });
+
+            const data = await response.json();
+
+            // Pagination logic
+            const pageSize = 8;
+            const pages = Math.max(1, Math.ceil(data.length / pageSize));
+            setTotalResults(data.length)
+            setTotalPages(pages);
+            setResults(data);
+
+        } catch (error) {
+            console.error('Error submitting data:', error);
+        }
+    };
+
     const nextPage = () => {
         if (page < totalPages) setPage(page + 1);
     };
@@ -91,7 +113,7 @@ function Home() {
         const currentItems = results.slice(startIndex, endIndex);
 
         return (
-            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap', marginLeft: "30px" }}>
+            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap', marginLeft: "200px" }}>
                 <tbody>
                     {currentItems.map((item, index) => (
                         <tr key={index}>
@@ -108,11 +130,19 @@ function Home() {
                                     onClick={() => handleClick(item.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: "ghostwhite", textDecoration: "none" }}
                                 >
                                     {item.url}
                                 </a>
-                                <span> — {clickCount[item.url] || 0} clicks</span>
+                            </td>
+                            <td style={{ border: '1px solid transparent', width: '60px', padding: '12px', textAlign: 'right' }}>
+                                {clickCount[item.url] !== 1 ? (
+                                    <span>{clickCount[item.url] || 0} clicks</span>
+                                ) : (
+                                    <span>{clickCount[item.url] || 0} click</span>
+                                )}
+                            </td>
+                            <td style={{ border: '1px solid transparent', padding: '12px', textAlign: 'left' }}>
+                                <button onClick={() => handleRemove(item.shift, item.url)}>Remove</button>
                             </td>
                         </tr>
                     ))}

@@ -5,7 +5,6 @@ from firebase_admin import credentials, db
 import KWIC
 import re
 import ExpressionParser
-import requests
 #Firebase Setup
 cred = credentials.Certificate("boogle-demo-firebase-adminsdk-fbsvc-27fad66187.json")
     
@@ -50,27 +49,28 @@ def preload_entries():
 
     ref = db.reference("entries")
     ref.delete()
+    i = 1
     
    
     for url, descriptor in start_entries:
-        try:
+        ''' try:
             response1 = requests.get(url, allow_redirects=True, stream=True, timeout=8)
             response2 = requests.head(url, allow_redirects=True, timeout=8)
-            if response1.status_code < 404 and response2.status_code < 404:
-                cleaned_descriptor = noise_filter.remove_noise(descriptor)
-                shifts = KWIC.CircularShift(cleaned_descriptor).shift()
-                shifts = KWIC.Alphabetizer(shifts).alphabetize()
-                ref.push({
-                    "url": url,
-                    "descriptorOriginal": descriptor,
-                    "descriptorClean": cleaned_descriptor,
-                    "shifts": shifts
-                })
-            else:
+            if response1.status_code < 404 and response2.status_code < 404: '''
+        cleaned_descriptor = noise_filter.remove_noise(descriptor)
+        shifts = KWIC.CircularShift(cleaned_descriptor).shift()
+        shifts = KWIC.Alphabetizer(shifts).alphabetize()
+        ref.push({
+            "url": url,
+            "descriptorOriginal": descriptor,
+            "descriptorClean": cleaned_descriptor,
+            "shifts": shifts
+        })
+        i += 1
+    ''' else:
                 start_entries.remove((url, descriptor))
-        except requests.RequestException:
-            start_entries.remove((url, descriptor))
-            continue
+        except (requests.exceptions.RequestException, Exception):
+            start_entries.remove((url, descriptor)) '''
 
 preload_entries()
 
@@ -170,6 +170,28 @@ def search_entries():
     paged = all_matched_shifts[start:end] '''
 
     return jsonify({"results": all_matched_shifts, "totalPages": totalPages, "totalResults": total_count}), 200
+
+@app.route('/api/remove', methods=['POST'])
+def remove_entry():
+    data = request.get_json()
+    descriptor = data.get("descriptor", "").strip()
+    url = data.get("url", "").strip()
+    current_entries = []
+    all_entries = start_entries
+    all_entries.remove((url, descriptor))
+    for index, item in enumerate(all_entries):
+        current_entries.append({"shift": item[1], "url": item[0]})
+    current_entries.sort(key=lambda x: x["shift"].lower())
+
+    entriesRef = db.reference("entries")
+    entries_items = entriesRef.get() or {}
+    for entry_id, entry in entries_items.items():
+        url_entry = entry["url"]
+        if (url_entry == url):
+            entriesRef.child(entry_id).delete()
+            break
+
+    return jsonify(current_entries), 200
 
 @app.route('/api/kwicIndex', methods=['GET'])
 def kwic_index():

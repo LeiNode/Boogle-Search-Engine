@@ -37,6 +37,16 @@
   }
 } */
 
+a {
+  color: rgb(170, 255, 251);
+  text-decoration: none;
+}
+
+a:hover {
+  color: khaki;
+  text-decoration: none;
+}
+
 .inline {
   display: flex;
   margin-top: 20px;
