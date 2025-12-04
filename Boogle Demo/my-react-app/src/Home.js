@@ -1,6 +1,9 @@
 import logo from './boogle-logo.png';
 import './Home.css';
 import React, { useEffect, useState } from 'react';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import Button from '@mui/material/Button';
 
 function Home() {
     const [inputData, setInputData] = useState('');
@@ -101,6 +104,26 @@ function Home() {
         if (page > 1) setPage(page - 1);
     };
 
+    const [open, setOpen] = useState(false);
+    const [options, setOptions] = useState([]);
+    const [selectedAutofillValue, setSelectedAutofillValue] = useState(null);
+
+    useEffect(() => {
+        if (!open) return;
+
+        async function fetchOptions() {
+            try {
+                const response = await fetch("http://localhost:5000/api/getOptions");
+                const data = await response.json();
+                setOptions(data.options);
+            } catch (error) {
+                console.error("Error fetching options:", error);
+            }
+        }
+
+        fetchOptions();
+    }, [open]);
+
     function makeTable(results, currentPage) {
         if (!Array.isArray(results) || results.length === 0) {
             return <div>No results found.</div>;
@@ -156,7 +179,7 @@ function Home() {
             <header className="App-header">
                 <form onSubmit={(e) => handleSubmit(e, 1)} className="inline">
                     <img src={logo} height={55} alt="Boogle Logo" style={{ marginRight: '20px' }} />
-                    <input
+                    {/* <input
                         type="text"
                         id="Search"
                         value={inputData}
@@ -169,8 +192,75 @@ function Home() {
                             height: '50px',
                             borderRadius: '32px'
                         }}
+                    /> */}
+                    <Autocomplete
+                        freeSolo
+                        id="Search"
+                        open={open}
+                        onOpen={() => setOpen(true)}
+                        onClose={() => setOpen(false)}
+                        value={selectedAutofillValue}
+                        onChange={(event, newValue) => {
+                            setSelectedAutofillValue(newValue);
+                        }}
+                        inputValue={inputData}
+                        onInputChange={(event, newInputValue) => {
+                            setInputData(newInputValue);
+                        }}
+                        // placeholder="Search..."
+                        options={options}
+                        renderOption={(props, option) => (
+                            <li {...props} style={{ padding: "18px 16px" }}>
+                                {option}
+                            </li>
+                        )}
+                        filterOptions={(opts) => {
+                            if (!inputData) return [];
+                            return opts.filter((item) =>
+                                item.startsWith(inputData)    // case-sensitive + "starts with"
+                            );
+                        }}
+                        sx={{
+                            paddingLeft: '24px',
+                            marginRight: '5px',
+                            width: '700px',
+                            height: '50px',
+                            borderRadius: '32px',
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: 'white', // Default border color
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: 'lightcyan', // Border color on hover
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: 'white', // Border color on focus
+                                },
+                            },
+                        }}
+                        renderInput={(params) => (
+                            <TextField {...params}
+                                label="Search..."
+                                InputLabelProps={{
+                                    style: { color: 'white' }, // change text color of label
+                                }}
+                                variant="outlined"
+                                sx={{
+                                    '& .MuiInputBase-input': {
+                                        color: 'white', // change input text color
+                                    },
+                                    '& .MuiAutocomplete-popupIndicator .MuiSvgIcon-root': {
+                                        color: 'white', // change color of dropdown arrow
+                                    },
+                                    '& .MuiAutocomplete-clearIndicator': {
+                                        color: 'white', // change color of 'X' symbol to clear text box
+                                    },
+                                }}
+                            />
+                        )}
                     />
-                    <input type="submit" value="Search" />
+                    <Button type="submit" variant="contained">Search</Button>
+                    {/* <input type="submit" value="Search" /> */}
                 </form>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <h6 style={{ display: 'flex', justifyContent: 'center', marginRight: '10px' }}>Sort By:</h6>

@@ -4,7 +4,8 @@
      - In Visual Studio Code, open the Boogle-Search-Engine project folder.
      - Open a new terminal in Visual Studio Code and change directory to the "Flask Files" folder.
      - Activate a virtual environment by typing .\venv\Scripts\activate into the terminal. (should see a green 'venv' before the command line if activated)
-     - With the virtual environment activated, change directory to the "my-react-app" folder in the terminal and then run npm install.
+     - With the virtual environment activated, change directory to the "my-react-app" folder in the terminal and then run "npm install".
+     - Additionally, run "npm install @mui/material @emotion/react @emotion/styled" to install Material UI.
 
 3. Run the main.py script.
      - Open a separate terminal in Visual Studio Code and change directory to the "Flask Files" folder.

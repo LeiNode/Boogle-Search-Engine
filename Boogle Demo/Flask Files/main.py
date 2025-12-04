@@ -193,6 +193,18 @@ def remove_entry():
 
     return jsonify(current_entries), 200
 
+@app.route('/api/getOptions', methods=['GET'])
+def get_options():
+    ref = db.reference("entries")
+    all_entries = ref.get() or {}
+    descriptor_list = []
+
+    for entry_id, entry in all_entries.items():
+        descriptor = entry["descriptorOriginal"]
+        descriptor_list.append(descriptor)
+
+    return jsonify({"options": descriptor_list}), 200
+
 @app.route('/api/kwicIndex', methods=['GET'])
 def kwic_index():
     ref = db.reference("entries")
