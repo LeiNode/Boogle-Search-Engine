@@ -136,7 +136,7 @@ function Home() {
         const currentItems = results.slice(startIndex, endIndex);
 
         return (
-            <table style={{ fontSize: '16px', whiteSpace: 'pre-wrap', marginLeft: "200px" }}>
+            <table style={{ borderRadius: '20px', fontSize: '16px', whiteSpace: 'pre-wrap' }}>
                 <tbody>
                     {currentItems.map((item, index) => (
                         <tr key={index}>
@@ -164,7 +164,7 @@ function Home() {
                                     <span>{clickCount[item.url] || 0} click</span>
                                 )}
                             </td>
-                            <td style={{ border: '1px solid transparent', padding: '12px', textAlign: 'left' }}>
+                            <td style={{ border: '1px solid transparent', padding: '12px', textAlign: 'left', maxWidth: '90px' }}>
                                 <button onClick={() => handleRemove(item.shift, item.url)}>Remove</button>
                             </td>
                         </tr>
@@ -192,7 +192,8 @@ function Home() {
                             height: '50px',
                             borderRadius: '32px'
                         }}
-                    /> */}
+                    />
+                    <input type="submit" value="Search" /> */}
                     <Autocomplete
                         freeSolo
                         id="Search"
@@ -217,7 +218,7 @@ function Home() {
                         filterOptions={(opts) => {
                             if (!inputData) return [];
                             return opts.filter((item) =>
-                                item.startsWith(inputData)    // case-sensitive + "starts with"
+                                item.startsWith(inputData)
                             );
                         }}
                         sx={{
@@ -260,7 +261,6 @@ function Home() {
                         )}
                     />
                     <Button type="submit" variant="contained">Search</Button>
-                    {/* <input type="submit" value="Search" /> */}
                 </form>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <h6 style={{ display: 'flex', justifyContent: 'center', marginRight: '10px' }}>Sort By:</h6>
@@ -269,6 +269,7 @@ function Home() {
                         <option value="optionB">Most Frequently Accessed</option>
                     </select>
                 </div>
+                <p style={{ boxShadow: '4px 4px 6px #818589', backgroundColor: '#0F52BA', color: 'white', padding: '2px 20px', fontSize: '16px', marginTop: '-8px', marginBottom: '30px', height: '25px' }}>To use "OR/AND/NOT" search, specify "OR", "AND", "NOT" in the search, e.g., <strong>Music OR service</strong>.</p>
 
                 {results.length === 0 ? (
                     <h5>No results found.</h5>

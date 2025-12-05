@@ -92,7 +92,7 @@ def add_entry():
     all_entries = ref.get() or {}
     for entry_id, entry in all_entries.items():
         url_entry = entry.get("url", "")
-        shifts_entry = entry.get("shifts", [])
+        shifts_entry = entry.get("descriptorOriginal", [])
         if url == url_entry:
             return jsonify({"message": "URL already exists in index!"}), 400
         if descriptor == shifts_entry:
